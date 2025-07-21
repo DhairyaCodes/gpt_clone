@@ -33,11 +33,11 @@ class _ChatInputFieldState extends ConsumerState<ChatInputField> {
         });
       }
     });
-    // widget.focusNode.requestFocus();
   }
 
   @override
   void dispose() {
+    _focusNode.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -70,7 +70,7 @@ class _ChatInputFieldState extends ConsumerState<ChatInputField> {
               _buildSheetOption(
                   icon: Icons.camera_alt_outlined,
                   label: 'Camera',
-                  onTap: () => _pickImages()),
+                  onTap: () => _pickImages(isCamera: true)),
               _buildSheetOption(
                   icon: Icons.photo_library_outlined,
                   label: 'Photos',
@@ -106,9 +106,20 @@ class _ChatInputFieldState extends ConsumerState<ChatInputField> {
     );
   }
 
-  Future<void> _pickImages() async {
+  Future<void> _pickImages({bool isCamera = false}) async {
     final imagePicker = ImagePicker();
-    final pickedFiles = await imagePicker.pickMultiImage();
+
+    List<XFile> pickedFiles = [];
+
+    if (isCamera) {
+      final file = await imagePicker.pickImage(source: ImageSource.camera);
+
+      if (file != null) {
+        pickedFiles.add(file);
+      }
+    } else {
+      pickedFiles = await imagePicker.pickMultiImage();
+    }
 
     if (pickedFiles.isNotEmpty) {
       if (mounted) setState(() => _isUploading = true);
@@ -121,9 +132,12 @@ class _ChatInputFieldState extends ConsumerState<ChatInputField> {
         setState(() {
           _imageUrls.addAll(imageUrls);
           _isUploading = false;
-
-          _focusNode.requestFocus();
         });
+
+        Future.delayed(Duration(milliseconds: 100), () {
+          if (mounted) _focusNode.requestFocus();
+        });
+        // _focusNode.requestFocus();
       }
 
       if (imageUrls.isEmpty && mounted) {
@@ -187,7 +201,7 @@ class _ChatInputFieldState extends ConsumerState<ChatInputField> {
                           child: const Icon(
                             Icons.close,
                             color: Colors.white,
-                            size: 16,
+                            size: 20,
                           ),
                         ),
                       ),
