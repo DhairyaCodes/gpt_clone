@@ -18,7 +18,6 @@ class _ChatViewState extends ConsumerState<ChatView> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     final conversation = ref.watch(chatStateProvider);
@@ -32,7 +31,8 @@ class _ChatViewState extends ConsumerState<ChatView> {
                   itemCount: conversation.messages.length,
                   reverse: true,
                   itemBuilder: (context, index) {
-                    final message = conversation.messages.reversed.toList()[index];
+                    final message =
+                        conversation.messages.reversed.toList()[index];
                     return MessageBubble(message: message);
                   },
                 ),
@@ -42,8 +42,10 @@ class _ChatViewState extends ConsumerState<ChatView> {
             padding: const EdgeInsets.all(8.0),
             child: ChatInputField(
               key: ValueKey(conversation?.id ?? 'new_chat_key'),
-              onSendMessage: (message, {imageUrl}) async {
-                await ref.read(chatStateProvider.notifier).sendMessage(message, imageUrl: imageUrl);
+              onSendMessage: ({required message, required imageUrls}) async {
+                await ref
+                    .read(chatStateProvider.notifier)
+                    .sendMessage(message: message, imageUrls: imageUrls);
               },
             ),
           ),

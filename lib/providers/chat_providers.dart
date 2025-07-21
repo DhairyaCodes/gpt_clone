@@ -47,13 +47,13 @@ class ChatStateNotifier extends StateNotifier<Conversation?> {
     state = conversation;
   }
 
-  Future<void> sendMessage(String message, {String? imageUrl}) async {
+  Future<void> sendMessage({required String message, required List<String> imageUrls}) async {
       final selectedModel = _ref.read(selectedModelProvider);
       final user = _ref.read(authStateChangesProvider).value;
       if (user == null) return;
 
       final userMessage = Message(
-          role: 'user', text: message, timestamp: DateTime.now(), imageUrl: imageUrl);
+          role: 'user', text: message, timestamp: DateTime.now(), imageUrls: imageUrls);
 
       String conversationIdForRequest;
       List<Message> historyForRequest = [];
@@ -72,14 +72,14 @@ class ChatStateNotifier extends StateNotifier<Conversation?> {
         state = state!.copyWith(messages: [...state!.messages, userMessage]);
       }
 
-      final aiLoadingMessage = Message(role: 'model', text: '...', timestamp: DateTime.now());
+      final aiLoadingMessage = Message(role: 'model', text: '...', timestamp: DateTime.now(), imageUrls: imageUrls);
       state = state!.copyWith(messages: [...state!.messages, aiLoadingMessage]);
 
       final Response<ResponseBody> streamResponse = await _ref.read(chatRepositoryProvider).sendMessage(
             message: message,
             conversationId: conversationIdForRequest,
             history: historyForRequest,
-            imageUrl: imageUrl,
+            imageUrls: imageUrls,
             model: selectedModel,
             userId: user.uid
           );
@@ -111,7 +111,7 @@ extension on Message {
     return Message(
       role: role,
       text: text ?? this.text,
-      imageUrl: imageUrl,
+      imageUrls: imageUrls,
       timestamp: timestamp,
     );
   }

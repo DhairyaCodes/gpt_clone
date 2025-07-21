@@ -1,27 +1,27 @@
 class Message {
   final String role;
   final String text;
-  final String? imageUrl;
+  final List<String> imageUrls;
   final DateTime timestamp;
 
   Message({
     required this.role,
     required this.text,
-    this.imageUrl,
+    required this.imageUrls,
     required this.timestamp,
   });
 
   factory Message.fromJson(Map<String, dynamic> json) {
     String textContent = '';
-    String? imageUrlContent;
+    List<String> imageUrls = [];
 
     if (json['parts'] != null) {
       for (var part in json['parts']) {
         if (part['text'] != null) {
           textContent += part['text'];
         }
-        if (part['imageUrl'] != null) {
-          imageUrlContent = part['imageUrl'];
+        if (part['imageUrls'] != null && part['imageUrls'] is List) {
+          imageUrls.addAll(List<String>.from(part['imageUrls']));
         }
       }
     }
@@ -29,7 +29,7 @@ class Message {
     return Message(
       role: json['role'],
       text: textContent,
-      imageUrl: imageUrlContent,
+      imageUrls: imageUrls,
       timestamp: DateTime.parse(json['timestamp']),
     );
   }

@@ -13,7 +13,7 @@ const storage = new CloudinaryStorage({
   params: {
     folder: 'gemini-chat-uploads',
     allowed_formats: ['jpg', 'jpeg', 'png', 'gif'],
-    transformation: [{ width: 500, height: 500, crop: 'limit' }]
+    // transformation: [{ width: 500, height: 500, crop: 'limit' }]
   }
 });
 

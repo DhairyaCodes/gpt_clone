@@ -18,7 +18,7 @@ class MessageBubble extends StatelessWidget {
         children: [
           CircleAvatar(
             backgroundColor: isUser ? Colors.blueAccent : Colors.green,
-            child: Text(isUser ? "You" : "AI", style: const TextStyle(color: Colors.white)),
+            child: Text(isUser ? "You" : "AI", style: const TextStyle(color: Colors.white, fontSize: 12)),
             radius: 16,
           ),
           const SizedBox(width: 12),
@@ -26,21 +26,36 @@ class MessageBubble extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (message.imageUrl != null)
+                if (isUser && message.imageUrls.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8.0),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxHeight: screenHeight * 0.4,
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(message.imageUrl!),
+                    child: SizedBox(
+                      height: screenHeight * 0.3,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: message.imageUrls.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          return ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              message.imageUrls[index],
+                              width: 180,
+                              height: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.broken_image, size: 80),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
                 if (message.text.isNotEmpty)
-                  Text(message.text),
+                  Text(
+                    message.text,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
               ],
             ),
           ),

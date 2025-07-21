@@ -34,21 +34,24 @@ const generateTitle = async (message) => {
   }
 };
 
-router.post('/upload', upload.single('image'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'No image file uploaded.' });
+router.post('/upload', upload.array('images', 5), (req, res) => {
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ error: 'No images uploaded.' });
   }
-  
-  // The 'upload' middleware handles everything. 
-  // If we reach here, the file is already on Cloudinary.
+
+  const imageUrls = req.files.map(file => file.path);
+
   res.status(200).json({
-    message: 'Image uploaded successfully!',
-    imageUrl: req.file.path
+    message: 'Images uploaded successfully!',
+    imageUrls: imageUrls
   });
 });
 
+
 router.post('/', async (req, res) => {
-  let { history, message, model, conversationId, imageUrl } = req.body;
+  let { history, message, model, conversationId, imageUrls } = req.body;
+  imageUrls = imageUrls || [];
+
   let fullResponseText = '';
   let finalConversationId = conversationId;
 
@@ -65,10 +68,11 @@ router.post('/', async (req, res) => {
     const geminiModel = genAI.getGenerativeModel({ model: model });
     const chat = geminiModel.startChat({ history });
     const promptParts = [{ text: message }];
-    if (imageUrl) {
-      const imagePart = await urlToGoogleGenerativeAIPart(imageUrl, 'image/jpeg');
+    for (const url of imageUrls) {
+      const imagePart = await urlToGoogleGenerativeAIPart(url, 'image/jpeg');
       promptParts.push(imagePart);
     }
+
 
     const result = await chat.sendMessageStream(promptParts);
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
@@ -90,7 +94,14 @@ router.post('/', async (req, res) => {
     res.status(500).json({ error: 'Failed to get response from Gemini' });
   } finally {
     if (fullResponseText) {
-      const userMessage = { role: 'user', parts: [{ text: message, imageUrl: imageUrl }].filter(p => p.text || p.imageUrl) };
+      const userMessage = {
+        role: 'user',
+        parts: [{
+          text: message,
+          imageUrls: imageUrls
+        }].filter(p => p.text || (p.imageUrls && p.imageUrls.length > 0))
+      };
+
       const modelMessage = { role: 'model', parts: [{ text: fullResponseText }] };
 
       try {

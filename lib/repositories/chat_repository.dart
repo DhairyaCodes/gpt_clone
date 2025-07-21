@@ -27,7 +27,8 @@ class ChatRepository {
 
   Future<Conversation?> getConversationMessages(String conversationId) async {
     try {
-      final response = await _dio.get('/conversations/messages/$conversationId');
+      final response =
+          await _dio.get('/conversations/messages/$conversationId');
       return Conversation.fromJson(response.data);
     } catch (e) {
       print("Error fetching messages: $e");
@@ -39,14 +40,21 @@ class ChatRepository {
     required String message,
     required String conversationId,
     required List<Message> history,
-    String? imageUrl,
-    required String userId, 
+    required List<String> imageUrls,
+    required String userId,
     required String model,
   }) async {
-    final historyJson = history.map((m) => {
-      'role': m.role,
-      'parts': [{'text': m.text}]
-    }).toList();
+    final historyJson = history
+        .map((m) => {
+              'role': m.role,
+              'parts': [
+                {
+                  'text': m.text,
+                  if (m.imageUrls.isNotEmpty) 'imageUrls': m.imageUrls,
+                }
+              ]
+            })
+        .toList();
 
     final data = {
       'model': model,
@@ -54,7 +62,7 @@ class ChatRepository {
       'conversationId': conversationId,
       'history': historyJson,
       'userId': userId,
-      if (imageUrl != null) 'imageUrl': imageUrl,
+      if (imageUrls.isNotEmpty) 'imageUrls': imageUrls,
     };
 
     return _dio.post(
@@ -64,18 +72,23 @@ class ChatRepository {
     );
   }
 
-  Future<String?> uploadImage(String filePath) async {
+  Future<List<String>> uploadImages(List<String> filePaths) async {
     try {
-      final fileName = filePath.split('/').last;
-      final formData = FormData.fromMap({
-        'image': await MultipartFile.fromFile(filePath, filename: fileName),
-      });
+      final formData = FormData();
+
+      for (final path in filePaths) {
+        final fileName = path.split('/').last;
+        formData.files.add(MapEntry(
+          'images',
+          await MultipartFile.fromFile(path, filename: fileName),
+        ));
+      }
 
       final response = await _dio.post('/chat/upload', data: formData);
-      return response.data['imageUrl'];
+      return List<String>.from(response.data['imageUrls']);
     } catch (e) {
-      print("Error uploading image: $e");
-      return null;
+      print("Error uploading images: $e");
+      return [];
     }
   }
 }

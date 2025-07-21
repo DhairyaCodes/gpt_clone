@@ -4,8 +4,8 @@ const messagePartSchema = new mongoose.Schema({
   text: { 
     type: String 
   },
-  imageUrl: {
-    type: String 
+  imageUrls: {
+    type: Array(String)
   },
 }, { _id: false });
 
@@ -38,6 +38,10 @@ const conversationSchema = new mongoose.Schema({
   },
   messages: [messageSchema],
   createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  modifiedAt: {
     type: Date,
     default: Date.now
   }

@@ -9,7 +9,8 @@ class ChatInputField extends ConsumerStatefulWidget {
     required this.onSendMessage,
   });
 
-  final Function(String message, {String? imageUrl}) onSendMessage;
+  final Function({required String message, required List<String> imageUrls})
+      onSendMessage;
 
   @override
   ConsumerState<ChatInputField> createState() => _ChatInputFieldState();
@@ -17,9 +18,10 @@ class ChatInputField extends ConsumerStatefulWidget {
 
 class _ChatInputFieldState extends ConsumerState<ChatInputField> {
   final _controller = TextEditingController();
-  String? _imageUrl;
+  List<String> _imageUrls = [];
   bool _isUploading = false;
   bool _isTyping = false;
+  FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
@@ -41,12 +43,15 @@ class _ChatInputFieldState extends ConsumerState<ChatInputField> {
   }
 
   void _sendMessage() {
-    if (_controller.text.trim().isNotEmpty || _imageUrl != null) {
-      widget.onSendMessage(_controller.text.trim(), imageUrl: _imageUrl);
+    if (_controller.text.trim().isNotEmpty || _imageUrls.isNotEmpty) {
+      widget.onSendMessage(
+        message: _controller.text.trim(),
+        imageUrls: _imageUrls,
+      );
       _controller.clear();
       if (mounted) {
         setState(() {
-          _imageUrl = null;
+          _imageUrls = [];
         });
       }
     }
@@ -65,13 +70,15 @@ class _ChatInputFieldState extends ConsumerState<ChatInputField> {
               _buildSheetOption(
                   icon: Icons.camera_alt_outlined,
                   label: 'Camera',
-                  onTap: () => _pickImage(ImageSource.camera)),
+                  onTap: () => _pickImages()),
               _buildSheetOption(
                   icon: Icons.photo_library_outlined,
                   label: 'Photos',
-                  onTap: () => _pickImage(ImageSource.gallery)),
+                  onTap: () => _pickImages()),
               _buildSheetOption(
-                  icon: Icons.folder_copy_outlined, label: 'Files', onTap: () {}),
+                  icon: Icons.folder_copy_outlined,
+                  label: 'Files',
+                  onTap: () {}),
             ],
           ),
         ),
@@ -99,24 +106,30 @@ class _ChatInputFieldState extends ConsumerState<ChatInputField> {
     );
   }
 
-  Future<void> _pickImage(ImageSource source) async {
+  Future<void> _pickImages() async {
     final imagePicker = ImagePicker();
-    final pickedFile = await imagePicker.pickImage(source: source);
+    final pickedFiles = await imagePicker.pickMultiImage();
 
-    if (pickedFile != null) {
+    if (pickedFiles.isNotEmpty) {
       if (mounted) setState(() => _isUploading = true);
-      final imageUrl =
-          await ref.read(chatRepositoryProvider).uploadImage(pickedFile.path);
+
+      final imagePaths = pickedFiles.map((file) => file.path).toList();
+      final imageUrls =
+          await ref.read(chatRepositoryProvider).uploadImages(imagePaths);
+
       if (mounted) {
         setState(() {
-          _imageUrl = imageUrl;
+          _imageUrls.addAll(imageUrls);
           _isUploading = false;
+
+          _focusNode.requestFocus();
         });
       }
 
-      if (imageUrl == null && mounted) {
+      if (imageUrls.isEmpty && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Image upload failed.')));
+          const SnackBar(content: Text('Image upload failed.')),
+        );
       }
     }
   }
@@ -124,63 +137,73 @@ class _ChatInputFieldState extends ConsumerState<ChatInputField> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    // if(widget.key == const ValueKey('new_chat_key')){
-    //   widget.focusNode.requestFocus();
-    // }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (_imageUrl != null)
+        if (_imageUrls.isNotEmpty)
           Container(
-            alignment: Alignment.centerLeft,
-            // margin: const EdgeInsets.only(bottom: 8.0),
+            height: screenHeight * 0.18,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.secondary,
-              borderRadius: BorderRadius.only(
+              borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(32),
                 topRight: Radius.circular(32),
               ),
             ),
-            padding: const EdgeInsets.all(16),
-            child: Stack(
-              children: [
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: screenHeight * 0.2),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: AspectRatio(
-                      aspectRatio: 1, // Square box
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _imageUrls.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final url = _imageUrls[index];
+                return Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
                       child: Image.network(
-                        _imageUrl!,
+                        url,
+                        width: 100,
+                        height: 100,
                         fit: BoxFit.cover,
                       ),
                     ),
-                  ),
-                ),
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: GestureDetector(
-                    onTap: () => setState(() => _imageUrl = null),
-                    child: Container(
-                      decoration: const BoxDecoration(
-                          color: Colors.black54, shape: BoxShape.circle),
-                      child: const Icon(Icons.close,
-                          color: Colors.white, size: 18),
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _imageUrls.removeAt(index);
+                          });
+                        },
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            color: Colors.black54,
+                            shape: BoxShape.circle,
+                          ),
+                          padding: const EdgeInsets.all(4),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                )
-              ],
+                  ],
+                );
+              },
             ),
           ),
         Container(
-          // height: 64,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.secondary,
-            borderRadius: _imageUrl == null
+            borderRadius: _imageUrls.isEmpty
                 ? BorderRadius.circular(30)
-                : BorderRadius.only(
+                : const BorderRadius.only(
                     bottomLeft: Radius.circular(32),
                     bottomRight: Radius.circular(32),
                   ),
@@ -193,19 +216,19 @@ class _ChatInputFieldState extends ConsumerState<ChatInputField> {
                     ? const SizedBox(
                         width: 24,
                         height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2))
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Icon(Icons.image_outlined),
               ),
               Expanded(
                 child: TextField(
-                  // onTapOutside: (event) {
-                  //   widget.focusNode.unfocus();
-                  // },
+                  focusNode: _focusNode,
                   controller: _controller,
                   decoration: const InputDecoration(
-                      hintText: 'Ask anything',
-                      border: InputBorder.none,
-                      hintStyle: TextStyle(color: Colors.grey)),
+                    hintText: 'Ask anything',
+                    border: InputBorder.none,
+                    hintStyle: TextStyle(color: Colors.grey),
+                  ),
                   onSubmitted: (_) => _sendMessage(),
                 ),
               ),
