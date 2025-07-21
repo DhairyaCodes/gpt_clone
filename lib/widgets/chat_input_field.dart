@@ -21,7 +21,7 @@ class _ChatInputFieldState extends ConsumerState<ChatInputField> {
   List<String> _imageUrls = [];
   bool _isUploading = false;
   bool _isTyping = false;
-  FocusNode _focusNode = FocusNode();
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
@@ -230,6 +230,9 @@ class _ChatInputFieldState extends ConsumerState<ChatInputField> {
                     hintStyle: TextStyle(color: Colors.grey),
                   ),
                   onSubmitted: (_) => _sendMessage(),
+                  onTapOutside: (event) {
+                    _focusNode.unfocus();
+                  },
                 ),
               ),
               if (!_isTyping)

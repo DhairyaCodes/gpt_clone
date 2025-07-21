@@ -40,7 +40,7 @@ class HomeScreen extends ConsumerWidget {
                           Text(selectedModelName,
                               style: const TextStyle(fontSize: 16)),
                            Icon(Icons.keyboard_arrow_down,
-                              color: Theme.of(context).colorScheme.tertiary),
+                              color: Theme.of(context).colorScheme.tertiaryFixedDim),
                         ],
                       ),
                     ),

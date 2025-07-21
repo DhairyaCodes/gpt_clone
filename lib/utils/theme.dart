@@ -35,7 +35,7 @@ class AppTheme {
       surface: Color(0xFF131314),
       onSurface: Colors.white,
       tertiary: Color.fromARGB(255, 48, 48, 48),
-      tertiaryFixedDim: Color.fromARGB(255, 48, 48, 48),
+      tertiaryFixedDim: Color.fromARGB(255, 54, 54, 54),
       onTertiary: Color.fromARGB(255, 202, 202, 202),
     ),
     appBarTheme: const AppBarTheme(

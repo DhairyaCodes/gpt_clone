@@ -11,7 +11,6 @@ class MessageBubble extends StatelessWidget {
     final isUser = message.role == 'user';
     final screenHeight = MediaQuery.of(context).size.height;
 
-    // USER MESSAGE BUBBLE
     if (isUser) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -66,7 +65,6 @@ class MessageBubble extends StatelessWidget {
       );
     }
 
-    // AI MESSAGE (plain text + markdown + optional arrow overlay on images)
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Align(
@@ -77,8 +75,6 @@ class MessageBubble extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // If AI ever sends images (e.g. via markdown), they’ll render inline.
-              // Markdown widget will size itself to content:
               if (message.text.isNotEmpty)
                 Markdown(
                   data: message.text,
