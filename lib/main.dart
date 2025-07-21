@@ -27,8 +27,8 @@ class MyApp extends StatelessWidget {
       title: 'ChatGPT Clone',
       home: const AuthWrapper(),
       theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme, // Set dark theme
-      themeMode: ThemeMode.dark,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.light,
       debugShowCheckedModeBanner: false,
     );
   }

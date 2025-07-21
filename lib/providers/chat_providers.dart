@@ -8,7 +8,8 @@ import 'package:gpt_clone/models/message.dart';
 import 'package:gpt_clone/providers/auth_providers.dart';
 import 'package:gpt_clone/repositories/chat_repository.dart';
 
-final conversationsProvider = FutureProvider<List<ConversationSnippet>>((ref) async {
+final conversationsProvider =
+    FutureProvider<List<ConversationSnippet>>((ref) async {
   final user = ref.watch(authStateChangesProvider).value;
   if (user == null) return []; // Return empty if no user
 
@@ -18,7 +19,8 @@ final conversationsProvider = FutureProvider<List<ConversationSnippet>>((ref) as
 
 final selectedConversationProvider = StateProvider<String?>((ref) => null);
 
-final chatStateProvider = StateNotifierProvider<ChatStateNotifier, Conversation?>((ref) {
+final chatStateProvider =
+    StateNotifierProvider<ChatStateNotifier, Conversation?>((ref) {
   return ChatStateNotifier(ref);
 });
 
@@ -29,8 +31,8 @@ final modelsProvider = FutureProvider<List<Map<String, String>>>((ref) async {
   ];
 });
 
-final selectedModelProvider = StateProvider<String>((ref) => 'gemini-1.5-flash-latest');
-
+final selectedModelProvider =
+    StateProvider<String>((ref) => 'gemini-1.5-flash-latest');
 
 class ChatStateNotifier extends StateNotifier<Conversation?> {
   final Ref _ref;
@@ -40,71 +42,90 @@ class ChatStateNotifier extends StateNotifier<Conversation?> {
     state = null;
   }
 
-
   Future<void> loadConversation(String conversationId) async {
     state = null;
-    final conversation = await _ref.read(chatRepositoryProvider).getConversationMessages(conversationId);
+    final conversation = await _ref
+        .read(chatRepositoryProvider)
+        .getConversationMessages(conversationId);
     state = conversation;
   }
 
-  Future<void> sendMessage({required String message, required List<String> imageUrls}) async {
-      final selectedModel = _ref.read(selectedModelProvider);
-      final user = _ref.read(authStateChangesProvider).value;
-      if (user == null) return;
+  Future<void> sendMessage(
+      {required String message, required List<String> imageUrls}) async {
+    final selectedModel = _ref.read(selectedModelProvider);
+    final user = _ref.read(authStateChangesProvider).value;
+    if (user == null) return;
 
-      final userMessage = Message(
-          role: 'user', text: message, timestamp: DateTime.now(), imageUrls: imageUrls);
+    final userMessage = Message(
+        role: 'user',
+        text: message,
+        timestamp: DateTime.now(),
+        imageUrls: imageUrls);
 
-      String conversationIdForRequest;
-      List<Message> historyForRequest = [];
+    String conversationIdForRequest;
+    List<Message> historyForRequest = [];
 
-      if (state == null) {
-        conversationIdForRequest = 'new';
-        state = Conversation(
-            id: 'temp_id',
-            title: 'New Conversation',
-            messages: [userMessage],
-            modelUsed: selectedModel,
-            createdAt: DateTime.now());
-      } else {
-        conversationIdForRequest = state!.id;
-        historyForRequest = state!.messages;
-        state = state!.copyWith(messages: [...state!.messages, userMessage]);
-      }
+    if (state == null) {
+      conversationIdForRequest = 'new';
+      state = Conversation(
+        id: 'temp_id',
+        title: 'New Conversation',
+        messages: [userMessage],
+        modelUsed: selectedModel,
+        createdAt: DateTime.now(),
+        modifiedAt: DateTime.now(),
+      );
+    } else {
+      conversationIdForRequest = state!.id;
+      historyForRequest = state!.messages;
+      state = state!.copyWith(messages: [...state!.messages, userMessage]);
+    }
 
-      final aiLoadingMessage = Message(role: 'model', text: '...', timestamp: DateTime.now(), imageUrls: imageUrls);
-      state = state!.copyWith(messages: [...state!.messages, aiLoadingMessage]);
+    final aiLoadingMessage = Message(
+        role: 'model',
+        text: '...',
+        timestamp: DateTime.now(),
+        imageUrls: imageUrls);
+    state = state!.copyWith(messages: [...state!.messages, aiLoadingMessage]);
 
-      final Response<ResponseBody> streamResponse = await _ref.read(chatRepositoryProvider).sendMessage(
+    final Response<ResponseBody> streamResponse = await _ref
+        .read(chatRepositoryProvider)
+        .sendMessage(
             message: message,
             conversationId: conversationIdForRequest,
             history: historyForRequest,
             imageUrls: imageUrls,
             model: selectedModel,
-            userId: user.uid
-          );
+            userId: user.uid);
+    // _ref.invalidate(conversationsProvider);
 
-      if (conversationIdForRequest == 'new') {
-        final newId = streamResponse.headers.value('x-conversation-id');
-        if (newId != null) {
-          state = state!.copyWith(id: newId);
-          _ref.invalidate(conversationsProvider);
-        }
+    if (conversationIdForRequest == 'new') {
+      final newId = streamResponse.headers.value('x-conversation-id');
+      if (newId != null) {
+        state = state!.copyWith(id: newId);
+        _ref.invalidate(conversationsProvider);
       }
-
-      streamResponse.data!.stream.listen((Uint8List uint8list) {
-        final chunk = utf8.decode(uint8list, allowMalformed: true);
-        final lastMessage = state!.messages.last;
-
-        final updatedText = lastMessage.text == '...' ? chunk : lastMessage.text + chunk;
-        final updatedMessage = lastMessage.copyWith(text: updatedText);
-
-        final updatedMessages = List<Message>.from(state!.messages);
-        updatedMessages.last = updatedMessage;
-        state = state!.copyWith(messages: updatedMessages);
-      });
     }
+
+    streamResponse.data!.stream.listen((Uint8List uint8list) {
+      final chunk = utf8.decode(uint8list, allowMalformed: true);
+      final lastMessage = state!.messages.last;
+
+      final updatedText =
+          lastMessage.text == '...' ? chunk : lastMessage.text + chunk;
+      final updatedMessage = lastMessage.copyWith(text: updatedText);
+
+      final updatedMessages = List<Message>.from(state!.messages);
+      updatedMessages.last = updatedMessage;
+      state = state!.copyWith(messages: updatedMessages);
+    }, onDone: () {
+      _ref.invalidate(conversationsProvider);
+    }, onError: (error) {
+      _ref.invalidate(conversationsProvider);
+      print("Error in stream: $error");
+    });
   }
+}
 
 extension on Message {
   Message copyWith({String? text}) {
@@ -120,11 +141,11 @@ extension on Message {
 extension on Conversation {
   Conversation copyWith({String? id, List<Message>? messages}) {
     return Conversation(
-      id: id ?? this.id,
-      title: title,
-      messages: messages ?? this.messages,
-      modelUsed: modelUsed,
-      createdAt: createdAt,
-    );
+        id: id ?? this.id,
+        title: title,
+        messages: messages ?? this.messages,
+        modelUsed: modelUsed,
+        createdAt: createdAt,
+        modifiedAt: modifiedAt);
   }
 }

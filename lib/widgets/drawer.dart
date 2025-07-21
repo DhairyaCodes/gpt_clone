@@ -62,10 +62,8 @@ class ChatHistoryPanel extends ConsumerWidget {
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
-              
               ),
               isThreeLine: false,
-                            
               onTap: () {
                 ref.read(chatStateProvider.notifier).startNewChat();
                 Navigator.of(context).pop(); // Close drawer
@@ -93,28 +91,43 @@ class ChatHistoryPanel extends ConsumerWidget {
 
             Expanded(
               child: conversationsAsyncValue.when(
-                data: (conversations) => ListView.builder(
-                  itemCount: conversations.length,
-                  itemBuilder: (context, index) {
-                    final conversation = conversations[index];
-                    return ListTile(
-                      title: Text(
-                        conversation.title,
+                data: (conversations) {
+                  if (conversations.isEmpty) {
+                    return Center(
+                      child: Text(
+                        "Start a Chat!",
                         style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary),
-                        overflow: TextOverflow.ellipsis,
+                          color: Theme.of(context).colorScheme.primary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                      onTap: () {
-                        ref.read(selectedConversationProvider.notifier).state =
-                            conversation.id;
-                        ref
-                            .read(chatStateProvider.notifier)
-                            .loadConversation(conversation.id);
-                        Navigator.of(context).pop();
-                      },
                     );
-                  },
-                ),
+                  }
+                  return ListView.builder(
+                    itemCount: conversations.length,
+                    itemBuilder: (context, index) {
+                      final conversation = conversations[index];
+                      return ListTile(
+                        title: Text(
+                          conversation.title,
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        onTap: () {
+                          ref
+                              .read(selectedConversationProvider.notifier)
+                              .state = conversation.id;
+                          ref
+                              .read(chatStateProvider.notifier)
+                              .loadConversation(conversation.id);
+                          Navigator.of(context).pop();
+                        },
+                      );
+                    },
+                  );
+                },
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, stack) => Center(
                     child: Text('Error: $err',

@@ -6,6 +6,7 @@ class Conversation {
   final List<Message> messages;
   final String modelUsed;
   final DateTime createdAt;
+  final DateTime modifiedAt;
 
   Conversation({
     required this.id,
@@ -13,6 +14,7 @@ class Conversation {
     required this.messages,
     required this.modelUsed,
     required this.createdAt,
+    required this.modifiedAt,
   });
 
   factory Conversation.fromJson(Map<String, dynamic> json) {
@@ -24,6 +26,7 @@ class Conversation {
           .toList(),
       modelUsed: json['modelUsed'],
       createdAt: DateTime.parse(json['createdAt']),
+      modifiedAt: DateTime.parse(json['modifiedAt']),
     );
   }
 }

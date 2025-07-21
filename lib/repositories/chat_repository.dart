@@ -44,17 +44,17 @@ class ChatRepository {
     required String userId,
     required String model,
   }) async {
-    final historyJson = history
-        .map((m) => {
-              'role': m.role,
-              'parts': [
-                {
-                  'text': m.text,
-                  if (m.imageUrls.isNotEmpty) 'imageUrls': m.imageUrls,
-                }
-              ]
-            })
-        .toList();
+    final historyJson = history.map((message) {
+      final parts = <Map<String, dynamic>>[];
+      if (message.text.isNotEmpty) {
+        parts.add({'text': message.text});
+      }
+
+      for (final url in message.imageUrls) {
+        parts.add({'imageUrl': url});
+      }
+      return {'role': message.role, 'parts': parts};
+    }).toList();
 
     final data = {
       'model': model,

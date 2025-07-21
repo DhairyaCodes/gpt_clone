@@ -16,8 +16,8 @@ router.get('/:userId', async (req, res) => {
     const { userId } = req.params;
     
     const conversations = await Conversation.find({ userId: userId })
-      .sort({ createdAt: -1 })
-      .select('_id title createdAt modelUsed');
+      .sort({ modifiedAt: -1 })
+      .select('_id title createdAt modifiedAt modelUsed');
 
     res.status(200).json(conversations);
   } catch (error) {
