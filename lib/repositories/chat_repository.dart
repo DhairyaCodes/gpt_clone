@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gpt_clone/models/conversation.dart';
 import 'package:gpt_clone/models/message.dart';
+import 'package:gpt_clone/private.dart';
 
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {
   return ChatRepository();
@@ -10,7 +11,7 @@ final chatRepositoryProvider = Provider<ChatRepository>((ref) {
 class ChatRepository {
   final Dio _dio = Dio(
     BaseOptions(
-      baseUrl: 'http://localhost:5000/api',
+      baseUrl: baseUrl,
     ),
   );
 

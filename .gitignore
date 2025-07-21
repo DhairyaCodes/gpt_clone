@@ -53,3 +53,4 @@ lib/firebase_options.dart
 android/app/google-services.json
 pubspec.lock
 firebase.json
+lib/private.dart
