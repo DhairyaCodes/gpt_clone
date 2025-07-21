@@ -1,0 +1,130 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gpt_clone/models/conversation.dart';
+import 'package:gpt_clone/models/message.dart';
+import 'package:gpt_clone/providers/auth_providers.dart';
+import 'package:gpt_clone/repositories/chat_repository.dart';
+
+final conversationsProvider = FutureProvider<List<ConversationSnippet>>((ref) async {
+  final user = ref.watch(authStateChangesProvider).value;
+  if (user == null) return []; // Return empty if no user
+
+  final chatRepository = ref.watch(chatRepositoryProvider);
+  return chatRepository.getConversationList(user.uid);
+});
+
+final selectedConversationProvider = StateProvider<String?>((ref) => null);
+
+final chatStateProvider = StateNotifierProvider<ChatStateNotifier, Conversation?>((ref) {
+  return ChatStateNotifier(ref);
+});
+
+final modelsProvider = FutureProvider<List<Map<String, String>>>((ref) async {
+  return [
+    {'name': 'Gemini Flash', 'code': 'gemini-1.5-flash-latest'},
+    {'name': 'Gemini Pro', 'code': 'gemini-1.5-pro-latest'}
+  ];
+});
+
+final selectedModelProvider = StateProvider<String>((ref) => 'gemini-1.5-flash-latest');
+
+
+class ChatStateNotifier extends StateNotifier<Conversation?> {
+  final Ref _ref;
+  ChatStateNotifier(this._ref) : super(null);
+
+  void startNewChat() {
+    state = null;
+  }
+
+
+  Future<void> loadConversation(String conversationId) async {
+    state = null;
+    final conversation = await _ref.read(chatRepositoryProvider).getConversationMessages(conversationId);
+    state = conversation;
+  }
+
+  Future<void> sendMessage(String message, {String? imageUrl}) async {
+      final selectedModel = _ref.read(selectedModelProvider);
+      final user = _ref.read(authStateChangesProvider).value;
+      if (user == null) return;
+
+      final userMessage = Message(
+          role: 'user', text: message, timestamp: DateTime.now(), imageUrl: imageUrl);
+
+      String conversationIdForRequest;
+      List<Message> historyForRequest = [];
+
+      if (state == null) {
+        conversationIdForRequest = 'new';
+        state = Conversation(
+            id: 'temp_id',
+            title: 'New Conversation',
+            messages: [userMessage],
+            modelUsed: selectedModel,
+            createdAt: DateTime.now());
+      } else {
+        conversationIdForRequest = state!.id;
+        historyForRequest = state!.messages;
+        state = state!.copyWith(messages: [...state!.messages, userMessage]);
+      }
+
+      final aiLoadingMessage = Message(role: 'model', text: '...', timestamp: DateTime.now());
+      state = state!.copyWith(messages: [...state!.messages, aiLoadingMessage]);
+
+      final Response<ResponseBody> streamResponse = await _ref.read(chatRepositoryProvider).sendMessage(
+            message: message,
+            conversationId: conversationIdForRequest,
+            history: historyForRequest,
+            imageUrl: imageUrl,
+            model: selectedModel,
+            userId: user.uid
+          );
+
+      if (conversationIdForRequest == 'new') {
+        final newId = streamResponse.headers.value('x-conversation-id');
+        if (newId != null) {
+          state = state!.copyWith(id: newId);
+          _ref.invalidate(conversationsProvider);
+        }
+      }
+
+      streamResponse.data!.stream.listen((Uint8List uint8list) {
+        final chunk = utf8.decode(uint8list, allowMalformed: true);
+        final lastMessage = state!.messages.last;
+
+        final updatedText = lastMessage.text == '...' ? chunk : lastMessage.text + chunk;
+        final updatedMessage = lastMessage.copyWith(text: updatedText);
+
+        final updatedMessages = List<Message>.from(state!.messages);
+        updatedMessages.last = updatedMessage;
+        state = state!.copyWith(messages: updatedMessages);
+      });
+    }
+  }
+
+extension on Message {
+  Message copyWith({String? text}) {
+    return Message(
+      role: role,
+      text: text ?? this.text,
+      imageUrl: imageUrl,
+      timestamp: timestamp,
+    );
+  }
+}
+
+extension on Conversation {
+  Conversation copyWith({String? id, List<Message>? messages}) {
+    return Conversation(
+      id: id ?? this.id,
+      title: title,
+      messages: messages ?? this.messages,
+      modelUsed: modelUsed,
+      createdAt: createdAt,
+    );
+  }
+}
