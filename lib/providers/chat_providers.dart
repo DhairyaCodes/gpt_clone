@@ -44,10 +44,15 @@ class ChatStateNotifier extends StateNotifier<Conversation?> {
 
   Future<void> loadConversation(String conversationId) async {
     state = null;
-    final conversation = await _ref
-        .read(chatRepositoryProvider)
-        .getConversationMessages(conversationId);
-    state = conversation;
+    try {
+      final conversation = await _ref
+          .read(chatRepositoryProvider)
+          .getConversationMessages(conversationId);
+      state = conversation;
+    } catch (e) {
+      print("Error loading conversation: $e");
+      rethrow; // Propagate to UI
+    }
   }
 
   Future<void> sendMessage(

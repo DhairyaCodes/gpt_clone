@@ -111,22 +111,33 @@ class ChatHistoryPanel extends ConsumerWidget {
                     itemBuilder: (context, index) {
                       final conversation = conversations[index];
                       return ListTile(
-                        title: Text(
-                          conversation.title,
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        onTap: () {
-                          ref
-                              .read(selectedConversationProvider.notifier)
-                              .state = conversation.id;
-                          ref
-                              .read(chatStateProvider.notifier)
-                              .loadConversation(conversation.id);
-                          Navigator.of(context).pop();
-                        },
-                      );
+                          title: Text(
+                            conversation.title,
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          onTap: () async {
+                            ref
+                                .read(selectedConversationProvider.notifier)
+                                .state = conversation.id;
+
+                            try {
+                              await ref
+                                  .read(chatStateProvider.notifier)
+                                  .loadConversation(conversation.id);
+                              Navigator.of(context).pop();
+                            } catch (e) {
+                              Navigator.of(context).pop();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Failed to load conversation. Please try again!',
+                                  ),
+                                ),
+                              );
+                            }
+                          });
                     },
                   );
                 },
@@ -135,11 +146,13 @@ class ChatHistoryPanel extends ConsumerWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text('Could not load chats.',
-                          style: TextStyle(
-                              color: Colors.red,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600)),
+                      const Text(
+                        'Could not load chats.',
+                        style: TextStyle(
+                            color: Colors.red,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600),
+                      ),
                       const SizedBox(height: 10),
                       ElevatedButton(
                         onPressed: () {

@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
       home: const AuthWrapper(),
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.dark,
+      themeMode: ThemeMode.light,
       debugShowCheckedModeBanner: false,
     );
   }

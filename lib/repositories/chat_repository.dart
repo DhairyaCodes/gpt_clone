@@ -32,7 +32,7 @@ class ChatRepository {
       return Conversation.fromJson(response.data);
     } catch (e) {
       print("Error fetching messages: $e");
-      return null;
+      throw Exception('Failed to load messages');
     }
   }
 
