@@ -19,9 +19,11 @@ class ChatHistoryPanel extends ConsumerWidget {
             // New Chat Button
             Container(
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.tertiary,
+                color: Theme.of(context).colorScheme.tertiaryFixedDim,
                 borderRadius: BorderRadius.circular(100),
               ),
+              height: 56,
+              alignment: Alignment.center,
               child: TextField(
                 textAlignVertical: TextAlignVertical.center,
                 textAlign: TextAlign.left,

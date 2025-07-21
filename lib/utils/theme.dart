@@ -9,8 +9,9 @@ class AppTheme {
       secondary: Color(0xFFF7F7F8),
       surface: Colors.white,
       onSurface: Colors.black,
-      tertiary: Color.fromARGB(255, 202, 202, 202),
+      tertiary: Color.fromARGB(255, 244, 244, 244),
       onTertiary: Color.fromARGB(255, 87, 87, 87),
+      tertiaryFixedDim: Color.fromARGB(255, 222, 222, 222),
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.white,
@@ -18,6 +19,11 @@ class AppTheme {
       iconTheme: IconThemeData(color: Colors.black),
       titleTextStyle: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.w500),
     ),
+    textTheme: TextTheme(
+      bodyLarge: TextStyle(
+        fontSize: 16,
+      )
+    )
   );
 
   static final ThemeData darkTheme = ThemeData(
@@ -28,7 +34,8 @@ class AppTheme {
       secondary: Color(0xFF1E1F20),
       surface: Color(0xFF131314),
       onSurface: Colors.white,
-      tertiary: Color.fromARGB(255, 56, 58, 59),
+      tertiary: Color.fromARGB(255, 48, 48, 48),
+      tertiaryFixedDim: Color.fromARGB(255, 48, 48, 48),
       onTertiary: Color.fromARGB(255, 202, 202, 202),
     ),
     appBarTheme: const AppBarTheme(

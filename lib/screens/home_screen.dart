@@ -84,7 +84,7 @@ class HomeScreen extends ConsumerWidget {
         child: ChatHistoryPanel(),
       ),
       body: ChatView(),
-      drawerScrimColor: Theme.of(context).colorScheme.tertiary,
+      drawerScrimColor: Theme.of(context).colorScheme.onTertiary.withOpacity(0.5),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:gpt_clone/models/message.dart';
 
 class MessageBubble extends StatelessWidget {
@@ -10,56 +11,85 @@ class MessageBubble extends StatelessWidget {
     final isUser = message.role == 'user';
     final screenHeight = MediaQuery.of(context).size.height;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: isUser ? null : Theme.of(context).colorScheme.secondary.withOpacity(0.5),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            backgroundColor: isUser ? Colors.blueAccent : Colors.green,
-            child: Text(isUser ? "You" : "AI", style: const TextStyle(color: Colors.white, fontSize: 12)),
-            radius: 16,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
+    // USER MESSAGE BUBBLE
+    if (isUser) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: Container(
+            constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.75,
+                minHeight: 48,
+                minWidth: 48),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.tertiary,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            // alignment: Alignment.centerLeft,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (isUser && message.imageUrls.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: SizedBox(
-                      height: screenHeight * 0.3,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: message.imageUrls.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 8),
-                        itemBuilder: (context, index) {
-                          return ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.network(
-                              message.imageUrls[index],
-                              width: 180,
-                              height: double.infinity,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.broken_image, size: 80),
-                            ),
-                          );
-                        },
+                if (message.imageUrls.isNotEmpty)
+                  SizedBox(
+                    height: screenHeight * 0.3,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: message.imageUrls.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (ctx, i) => ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.network(
+                          message.imageUrls[i],
+                          width: 180,
+                          height: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              const Icon(Icons.broken_image, size: 80),
+                        ),
                       ),
                     ),
                   ),
-                if (message.text.isNotEmpty)
-                  Text(
-                    message.text,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                if (message.imageUrls.isNotEmpty)
+                  SizedBox(
+                    height: 16,
                   ),
+                if (message.text.isNotEmpty)
+                  Text(message.text,
+                      style: Theme.of(context).textTheme.bodyLarge),
               ],
             ),
           ),
-        ],
+        ),
+      );
+    }
+
+    // AI MESSAGE (plain text + markdown + optional arrow overlay on images)
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.85),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // If AI ever sends images (e.g. via markdown), they’ll render inline.
+              // Markdown widget will size itself to content:
+              if (message.text.isNotEmpty)
+                Markdown(
+                  data: message.text,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
+                      .copyWith(p: Theme.of(context).textTheme.bodyLarge),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
