@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+
 import 'package:gpt_clone/models/message.dart';
 
 class MessageBubble extends StatelessWidget {
@@ -75,7 +77,17 @@ class MessageBubble extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (message.text.isNotEmpty)
+              if (message.text == "...")
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SpinKitThreeBounce(
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 24.0,
+                    ),
+                  ],
+                )
+              else if (message.text.isNotEmpty)
                 Markdown(
                   data: message.text,
                   shrinkWrap: true,

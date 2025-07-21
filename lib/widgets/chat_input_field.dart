@@ -134,15 +134,20 @@ class _ChatInputFieldState extends ConsumerState<ChatInputField> {
           _isUploading = false;
         });
 
-        Future.delayed(Duration(milliseconds: 100), () {
-          if (mounted) _focusNode.requestFocus();
-        });
+        if (imageUrls.isNotEmpty)
+          Future.delayed(Duration(milliseconds: 100), () {
+            if (mounted) _focusNode.requestFocus();
+          });
         // _focusNode.requestFocus();
       }
 
       if (imageUrls.isEmpty && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Image upload failed.')),
+          const SnackBar(
+            content: Text('Image upload failed. Please try again!'),
+            dismissDirection: DismissDirection.horizontal,
+            elevation: 10,
+          ),
         );
       }
     }

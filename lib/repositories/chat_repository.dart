@@ -21,7 +21,7 @@ class ChatRepository {
       return data.map((json) => ConversationSnippet.fromJson(json)).toList();
     } catch (e) {
       print("Error fetching conversation list: $e");
-      return [];
+      throw Exception('Failed to load conversations');
     }
   }
 

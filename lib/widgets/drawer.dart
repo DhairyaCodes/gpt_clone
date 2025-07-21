@@ -132,8 +132,39 @@ class ChatHistoryPanel extends ConsumerWidget {
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, stack) => Center(
-                    child: Text('Error: $err',
-                        style: const TextStyle(color: Colors.red))),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('Could not load chats.',
+                          style: TextStyle(
+                              color: Colors.red,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        onPressed: () {
+                          // Invalidate the provider to retry the fetch
+                          ref.invalidate(conversationsProvider);
+                        },
+                        style: ButtonStyle(
+                          // side: WidgetStatePropertyAll(
+                          //   BorderSide(
+                          //     color: Theme.of(context).colorScheme.primary,
+                          //   ),
+                          // ),
+                          backgroundColor: WidgetStatePropertyAll(
+                              Theme.of(context).colorScheme.primary),
+                        ),
+                        child: Text(
+                          'Retry',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
               ),
             ),
             Divider(color: Theme.of(context).colorScheme.tertiary, height: 1),
