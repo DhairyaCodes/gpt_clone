@@ -55,21 +55,23 @@ class ChatStateNotifier extends StateNotifier<Conversation?> {
     }
   }
 
-  Future<void> sendMessage(
-      {required String message, required List<String> imageUrls}) async {
+  Future<void> sendMessage({
+    required String message,
+    required List<String> imageUrls,
+  }) async {
     final selectedModel = _ref.read(selectedModelProvider);
     final user = _ref.read(authStateChangesProvider).value;
     if (user == null) return;
 
     final userMessage = Message(
-        role: 'user',
-        text: message,
-        timestamp: DateTime.now(),
-        imageUrls: imageUrls);
+      role: 'user',
+      text: message,
+      timestamp: DateTime.now(),
+      imageUrls: imageUrls,
+    );
 
     String conversationIdForRequest;
     List<Message> historyForRequest = [];
-
     if (state == null) {
       conversationIdForRequest = 'new';
       state = Conversation(
@@ -82,53 +84,81 @@ class ChatStateNotifier extends StateNotifier<Conversation?> {
       );
     } else {
       conversationIdForRequest = state!.id;
-      historyForRequest = state!.messages;
-      state = state!.copyWith(messages: [...state!.messages, userMessage]);
+      historyForRequest =
+          state!.messages.where((m) => m.text.trim().isNotEmpty).toList();
+
+      state = state!.copyWith(messages: [...historyForRequest, userMessage]);
     }
 
     final aiLoadingMessage = Message(
-        role: 'model',
-        text: '...',
-        timestamp: DateTime.now(),
-        imageUrls: imageUrls);
+      role: 'model',
+      text: '...',
+      timestamp: DateTime.now(),
+      imageUrls: imageUrls,
+    );
     state = state!.copyWith(messages: [...state!.messages, aiLoadingMessage]);
 
-    final Response<ResponseBody> streamResponse = await _ref
-        .read(chatRepositoryProvider)
-        .sendMessage(
-            message: message,
-            conversationId: conversationIdForRequest,
-            history: historyForRequest,
-            imageUrls: imageUrls,
-            model: selectedModel,
-            userId: user.uid);
-    // _ref.invalidate(conversationsProvider);
+    try {
+      final Response<ResponseBody> streamResponse =
+          await _ref.read(chatRepositoryProvider).sendMessage(
+                message: message,
+                conversationId: conversationIdForRequest,
+                history: historyForRequest,
+                imageUrls: imageUrls,
+                model: selectedModel,
+                userId: user.uid,
+              );
 
-    if (conversationIdForRequest == 'new') {
-      final newId = streamResponse.headers.value('x-conversation-id');
-      if (newId != null) {
-        state = state!.copyWith(id: newId);
-        _ref.invalidate(conversationsProvider);
+      if (conversationIdForRequest == 'new') {
+        final newId = streamResponse.headers.value('x-conversation-id');
+        if (newId != null) {
+          state = state!.copyWith(id: newId);
+          _ref.invalidate(conversationsProvider);
+        }
       }
-    }
 
-    streamResponse.data!.stream.listen((Uint8List uint8list) {
-      final chunk = utf8.decode(uint8list, allowMalformed: true);
-      final lastMessage = state!.messages.last;
+      streamResponse.data!.stream.listen(
+        (Uint8List uint8list) {
+          final chunk = utf8.decode(uint8list, allowMalformed: true);
+          final lastMessage = state!.messages.last;
 
-      final updatedText =
-          lastMessage.text == '...' ? chunk : lastMessage.text + chunk;
-      final updatedMessage = lastMessage.copyWith(text: updatedText);
+          final updatedText =
+              lastMessage.text == '...' ? chunk : lastMessage.text + chunk;
+          final updatedMessage = lastMessage.copyWith(text: updatedText);
+
+          final updatedMessages = List<Message>.from(state!.messages);
+          updatedMessages.last = updatedMessage;
+          state = state!.copyWith(messages: updatedMessages);
+        },
+        onDone: () {
+          _ref.invalidate(conversationsProvider);
+        },
+        onError: (error) {
+          _ref.invalidate(conversationsProvider);
+          final updatedMessages = List<Message>.from(state!.messages);
+          final lastMessage = updatedMessages.last;
+          final errorMessage = lastMessage.copyWith(text: '');
+          updatedMessages[updatedMessages.length - 1] = errorMessage;
+
+          state = state!.copyWith(messages: updatedMessages);
+
+          print("Stream error: $error");
+
+          throw Exception("Could not stream response. Please try again!");
+        },
+      );
+    } catch (e) {
+      print("Send message error: $e");
 
       final updatedMessages = List<Message>.from(state!.messages);
-      updatedMessages.last = updatedMessage;
+      final lastMessage = updatedMessages.last;
+      final errorMessage = lastMessage.copyWith(text: '');
+      updatedMessages[updatedMessages.length - 1] = errorMessage;
+
       state = state!.copyWith(messages: updatedMessages);
-    }, onDone: () {
-      _ref.invalidate(conversationsProvider);
-    }, onError: (error) {
-      _ref.invalidate(conversationsProvider);
-      print("Error in stream: $error");
-    });
+
+      throw Exception("Could not send message. Please try again!");
+    }
   }
 }
 

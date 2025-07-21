@@ -87,6 +87,23 @@ class MessageBubble extends StatelessWidget {
                     ),
                   ],
                 )
+              else if (message.text == '')
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.error.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: BoxBorder.all(
+                        color: Theme.of(context).colorScheme.error),
+                  ),
+                  child: Text(
+                    "Failed to generate response. Please try again!",
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyLarge
+                        ?.copyWith(color: Theme.of(context).colorScheme.error),
+                  ),
+                )
               else if (message.text.isNotEmpty)
                 Markdown(
                   data: message.text,
@@ -94,7 +111,7 @@ class MessageBubble extends StatelessWidget {
                   physics: const NeverScrollableScrollPhysics(),
                   styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
                       .copyWith(p: Theme.of(context).textTheme.bodyLarge),
-                ),
+                )
             ],
           ),
         ),
