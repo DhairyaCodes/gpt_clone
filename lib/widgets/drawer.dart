@@ -43,6 +43,7 @@ class ChatHistoryPanel extends ConsumerWidget {
                       color: Theme.of(context).colorScheme.onTertiary,
                     ),
                   ),
+                  enabled: false,
                 ),
                 style: TextStyle(fontSize: 16),
               ),
@@ -111,33 +112,51 @@ class ChatHistoryPanel extends ConsumerWidget {
                     itemBuilder: (context, index) {
                       final conversation = conversations[index];
                       return ListTile(
-                          title: Text(
-                            conversation.title,
-                            style: TextStyle(
-                                color: Theme.of(context).colorScheme.primary),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          onTap: () async {
-                            ref
-                                .read(selectedConversationProvider.notifier)
-                                .state = conversation.id;
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          // side: BorderSide(
+                          //     color: conversation.id ==
+                          //             (ref
+                          //                 .read(selectedConversationProvider
+                          //                     .notifier)
+                          //                 .state)
+                          //         ? Theme.of(context).colorScheme.primary
+                          //         : Colors.transparent),
+                            
+                        ),
+                        tileColor: conversation.id ==
+                                      (ref
+                                          .read(selectedConversationProvider
+                                              .notifier)
+                                          .state) ? Theme.of(context).colorScheme.tertiaryFixedDim : Colors.transparent,
+                        title: Text(
+                          conversation.title,
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        onTap: () async {
+                          ref
+                              .read(selectedConversationProvider.notifier)
+                              .state = conversation.id;
 
-                            try {
-                              await ref
-                                  .read(chatStateProvider.notifier)
-                                  .loadConversation(conversation.id);
-                              Navigator.of(context).pop();
-                            } catch (e) {
-                              Navigator.of(context).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Failed to load conversation. Please try again!',
-                                  ),
+                          try {
+                            await ref
+                                .read(chatStateProvider.notifier)
+                                .loadConversation(conversation.id);
+                            Navigator.of(context).pop();
+                          } catch (e) {
+                            Navigator.of(context).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Failed to load conversation. Please try again!',
                                 ),
-                              );
-                            }
-                          });
+                              ),
+                            );
+                          }
+                        },
+                      );
                     },
                   );
                 },

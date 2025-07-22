@@ -11,7 +11,7 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ChatGPT'),
+        title: const Text('ChatGPT', style: TextStyle(fontSize: 20),),
         actions: [
           Consumer(
             builder: (context, ref, child) {
@@ -38,7 +38,7 @@ class HomeScreen extends ConsumerWidget {
                       child: Row(
                         children: [
                           Text(selectedModelName,
-                              style: const TextStyle(fontSize: 16)),
+                              style: const TextStyle(fontSize: 14)),
                            Icon(Icons.keyboard_arrow_down,
                               color: Theme.of(context).colorScheme.tertiaryFixedDim),
                         ],

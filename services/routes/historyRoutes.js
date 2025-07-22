@@ -21,7 +21,7 @@ router.get('/:userId', async (req, res) => {
 
     res.status(200).json(conversations);
   } catch (error) {
-    console.error("❌ Error fetching conversation list:", error);
+    console.error("Error fetching conversation list:", error);
     res.status(500).json({ error: 'Failed to fetch conversation list.' });
   }
 });
@@ -39,7 +39,7 @@ router.get('/messages/:conversationId', async (req, res) => {
 
     res.status(200).json(conversation);
   } catch (error) {
-    console.error("❌ Error fetching conversation messages:", error);
+    console.error("Error fetching conversation messages:", error);
     res.status(500).json({ error: 'Failed to fetch conversation messages.' });
   }
 });
