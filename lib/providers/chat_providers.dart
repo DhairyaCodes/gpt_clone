@@ -40,6 +40,7 @@ class ChatStateNotifier extends StateNotifier<Conversation?> {
 
   void startNewChat() {
     state = null;
+    _ref.invalidate(conversationsProvider);
   }
 
   Future<void> loadConversation(String conversationId) async {
@@ -132,6 +133,8 @@ class ChatStateNotifier extends StateNotifier<Conversation?> {
         },
         onDone: () {
           _ref.invalidate(conversationsProvider);
+          _ref.read(selectedConversationProvider.notifier).state =
+              state!.id;
         },
         onError: (error) {
           _ref.invalidate(conversationsProvider);
