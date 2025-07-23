@@ -32,17 +32,26 @@ class Conversation {
 }
 
 class ConversationSnippet {
-    final String id;
-    final String title;
-    final DateTime createdAt;
+  final String id;
+  final String title;
+  final DateTime createdAt;
+  final DateTime modifiedAt;
+  final String modelUsed;
 
-    ConversationSnippet({required this.id, required this.title, required this.createdAt});
+  ConversationSnippet(
+      {required this.id,
+      required this.title,
+      required this.createdAt,
+      required this.modifiedAt,
+      required this.modelUsed});
 
-    factory ConversationSnippet.fromJson(Map<String, dynamic> json) {
-        return ConversationSnippet(
-            id: json['_id'],
-            title: json['title'],
-            createdAt: DateTime.parse(json['createdAt']),
-        );
-    }
+  factory ConversationSnippet.fromJson(Map<String, dynamic> json) {
+    return ConversationSnippet(
+      id: json['_id'],
+      title: json['title'],
+      createdAt: DateTime.parse(json['createdAt']),
+      modifiedAt: DateTime.parse(json['modifiedAt']),
+      modelUsed: json['modelUsed'],
+    );
+  }
 }
