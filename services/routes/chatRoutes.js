@@ -24,13 +24,13 @@ async function urlToGoogleGenerativeAIPart(url, mimeType) {
 const generateTitle = async (message) => {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const prompt = `Generate a short, concise title (4-5 words max) for the following user prompt. Respond with only the title and nothing else: "${message}"`;
+    const prompt = `Generate a short, concise title (4-5 words max) for the following user prompt. If the user is not specific about topic, respond 'New Chat'. Respond with only the title and nothing else: "${message}"`;
     const result = await model.generateContent(prompt);
     const response = await result.response;
     return response.text().trim();
   } catch (error) {
     console.error("Error generating title:", error);
-    return "New Conversation";
+    return "New Chat";
   }
 };
 

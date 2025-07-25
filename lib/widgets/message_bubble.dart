@@ -12,6 +12,7 @@ class MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final isUser = message.role == 'user';
     final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
 
     if (isUser) {
       return Padding(
@@ -20,9 +21,7 @@ class MessageBubble extends StatelessWidget {
           alignment: Alignment.centerRight,
           child: Container(
             constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.75,
-                minHeight: 48,
-                minWidth: 48),
+                maxWidth: screenWidth * 0.75, minHeight: 48, minWidth: 48),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.tertiary,
@@ -37,6 +36,7 @@ class MessageBubble extends StatelessWidget {
                   SizedBox(
                     height: screenHeight * 0.3,
                     child: ListView.separated(
+                      shrinkWrap: true,
                       scrollDirection: Axis.horizontal,
                       itemCount: message.imageUrls.length,
                       separatorBuilder: (_, __) => const SizedBox(width: 8),
@@ -44,7 +44,9 @@ class MessageBubble extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                         child: Image.network(
                           message.imageUrls[i],
-                          width: 180,
+                          width: (message.imageUrls.length == 1
+                              ? screenWidth * 0.75 - 24
+                              : 180),
                           height: double.infinity,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) =>
@@ -77,41 +79,41 @@ class MessageBubble extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (message.text == "...")
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SpinKitThreeBounce(
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 24.0,
-                    ),
-                  ],
-                )
-              else if (message.text == '')
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.error.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: BoxBorder.all(
-                        color: Theme.of(context).colorScheme.error),
-                  ),
-                  child: Text(
-                    "Failed to generate response. Please try again!",
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyLarge
-                        ?.copyWith(color: Theme.of(context).colorScheme.error),
-                  ),
-                )
-              else if (message.text.isNotEmpty)
-                Markdown(
-                  data: message.text,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
-                      .copyWith(p: Theme.of(context).textTheme.bodyLarge),
-                )
+              // if (message.text == " ")
+              //   Row(
+              //     mainAxisSize: MainAxisSize.min,
+              //     children: [
+              //       SpinKitThreeBounce(
+              //         color: Theme.of(context).colorScheme.primary,
+              //         size: 24.0,
+              //       ),
+              //     ],
+              //   )
+              // else if (message.text == '')
+              //   Container(
+              //     padding: const EdgeInsets.all(12),
+              //     decoration: BoxDecoration(
+              //       color: Theme.of(context).colorScheme.error.withOpacity(0.1),
+              //       borderRadius: BorderRadius.circular(12),
+              //       border: BoxBorder.all(
+              //           color: Theme.of(context).colorScheme.error),
+              //     ),
+              //     child: Text(
+              //       "Failed to generate response. Please try again!",
+              //       style: Theme.of(context)
+              //           .textTheme
+              //           .bodyLarge
+              //           ?.copyWith(color: Theme.of(context).colorScheme.error),
+              //     ),
+              //   )
+              // else if (message.text.isNotEmpty)
+              Markdown(
+                data: message.text,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
+                    .copyWith(p: Theme.of(context).textTheme.bodyLarge),
+              )
             ],
           ),
         ),

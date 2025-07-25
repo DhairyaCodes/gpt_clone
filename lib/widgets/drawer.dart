@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gpt_clone/providers/auth_providers.dart';
 import 'package:gpt_clone/providers/chat_providers.dart';
+import 'package:gpt_clone/widgets/theme_slider.dart';
 
 class ChatHistoryPanel extends ConsumerWidget {
   const ChatHistoryPanel({super.key});
@@ -39,6 +40,7 @@ class ChatHistoryPanel extends ConsumerWidget {
                 ),
                 onTap: () {
                   ref.read(chatStateProvider.notifier).startNewChat();
+                  ref.read(selectedConversationProvider.notifier).state = null;
                   Navigator.of(context).pop(); // Close drawer
                 },
               ),
@@ -97,13 +99,13 @@ class ChatHistoryPanel extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         onTap: () async {
-                          ref
-                              .read(selectedConversationProvider.notifier)
-                              .state = conversation.id;
                           try {
                             await ref
                                 .read(chatStateProvider.notifier)
                                 .loadConversation(conversation.id);
+                            ref
+                                .read(selectedConversationProvider.notifier)
+                                .state = conversation.id;
                             Navigator.of(context).pop();
                           } catch (e) {
                             Navigator.of(context).pop();
@@ -167,6 +169,7 @@ class ChatHistoryPanel extends ConsumerWidget {
               color: Theme.of(context).colorScheme.secondary,
               padding: EdgeInsets.symmetric(vertical: 8),
               child: SafeArea(
+                bottom: false,
                 child: Container(
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.tertiaryFixedDim,
@@ -201,7 +204,7 @@ class ChatHistoryPanel extends ConsumerWidget {
             ),
           ),
           Positioned(
-            bottom: 0,
+            bottom: 16,
             left: 0,
             right: 0,
             child: Column(
@@ -212,26 +215,25 @@ class ChatHistoryPanel extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Divider(
-                        color: Theme.of(context).colorScheme.tertiary,
+                        color: Theme.of(context).colorScheme.tertiaryFixedDim,
                         height: 1,
                       ),
-                      if (currentUser != null)
-                        ListTile(
-                          leading: CircleAvatar(
-                            backgroundImage:
-                                NetworkImage(currentUser.photoURL ?? ''),
-                            radius: 14,
-                          ),
-                          title: Text(
-                            currentUser.displayName ?? 'User',
-                            style: TextStyle(
+                      // if (currentUser != null)
+                      ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: NetworkImage(
+                              'https://res.cloudinary.com/dcwhinypr/image/upload/v1753128912/dp1_zrgayz.jpg'),
+                          radius: 18,
+                        ),
+                        title: Text(
+                          'Dhairya',
+                          style: TextStyle(
                               color: Theme.of(context).colorScheme.primary,
                               fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          trailing: Icon(Icons.more_horiz,
-                              color: Theme.of(context).colorScheme.primary),
+                              fontSize: 18),
                         ),
+                        trailing: Icon(Icons.more_horiz),
+                      ),
                       SizedBox(
                         height: 8,
                       ),

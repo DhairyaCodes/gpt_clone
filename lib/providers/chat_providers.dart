@@ -8,7 +8,6 @@ import 'package:gpt_clone/models/message.dart';
 import 'package:gpt_clone/providers/auth_providers.dart';
 import 'package:gpt_clone/repositories/chat_repository.dart';
 
-
 final conversationsProvider =
     FutureProvider<List<ConversationSnippet>>((ref) async {
   final user = ref.watch(authStateChangesProvider).value;
@@ -18,13 +17,7 @@ final conversationsProvider =
   return chatRepository.getConversationList(user.uid);
 });
 
-
-
-
 final selectedConversationProvider = StateProvider<String?>((ref) => null);
-
-
-
 
 final modelsProvider = FutureProvider<List<Map<String, String>>>((ref) async {
   return [
@@ -33,14 +26,8 @@ final modelsProvider = FutureProvider<List<Map<String, String>>>((ref) async {
   ];
 });
 
-
-
-
 final selectedModelProvider =
     StateProvider<String>((ref) => 'gemini-1.5-flash-latest');
-
-
-
 
 final chatStateProvider =
     StateNotifierProvider<ChatStateNotifier, Conversation?>((ref) {
@@ -57,7 +44,7 @@ class ChatStateNotifier extends StateNotifier<Conversation?> {
   }
 
   Future<void> loadConversation(String conversationId) async {
-    state = null;
+    // state = null;
     try {
       final conversation = await _ref
           .read(chatRepositoryProvider)
@@ -95,20 +82,28 @@ class ChatStateNotifier extends StateNotifier<Conversation?> {
         modelUsed: selectedModel,
         createdAt: DateTime.now(),
         modifiedAt: DateTime.now(),
+        isLoading: true,
       );
     } else {
       conversationIdForRequest = state!.id;
-      historyForRequest =
-          state!.messages.where((m) => m.text.trim().isNotEmpty).toList();
+      historyForRequest = state!.messages;
 
-      state = state!.copyWith(messages: [...historyForRequest, userMessage]);
+      if (historyForRequest.last.role == 'user') {
+        historyForRequest.removeLast();
+        // historyForRequest.removeLast();
+      }
+
+      state = state!.copyWith(
+          messages: [...historyForRequest, userMessage],
+          isLoading: true,
+          isError: false);
     }
 
     final aiLoadingMessage = Message(
       role: 'model',
-      text: '...',
+      text: '',
       timestamp: DateTime.now(),
-      imageUrls: imageUrls,
+      imageUrls: [],
     );
     state = state!.copyWith(messages: [...state!.messages, aiLoadingMessage]);
 
@@ -136,8 +131,7 @@ class ChatStateNotifier extends StateNotifier<Conversation?> {
           final chunk = utf8.decode(uint8list, allowMalformed: true);
           final lastMessage = state!.messages.last;
 
-          final updatedText =
-              lastMessage.text == '...' ? chunk : lastMessage.text + chunk;
+          final updatedText = lastMessage.text + chunk;
           final updatedMessage = lastMessage.copyWith(text: updatedText);
 
           final updatedMessages = List<Message>.from(state!.messages);
@@ -145,17 +139,20 @@ class ChatStateNotifier extends StateNotifier<Conversation?> {
           state = state!.copyWith(messages: updatedMessages);
         },
         onDone: () {
+          state = state!.copyWith(isLoading: false);
           _ref.invalidate(conversationsProvider);
-          _ref.read(selectedConversationProvider.notifier).state =
-              state!.id;
+          _ref.read(selectedConversationProvider.notifier).state = state!.id;
         },
         onError: (error) {
+          state = state!.copyWith(isLoading: false, isError: true);
           _ref.invalidate(conversationsProvider);
-          final updatedMessages = List<Message>.from(state!.messages);
-          final lastMessage = updatedMessages.last;
-          final errorMessage = lastMessage.copyWith(text: '');
-          updatedMessages[updatedMessages.length - 1] = errorMessage;
+          // final updatedMessages = List<Message>.from(state!.messages);
+          // final lastMessage = updatedMessages.last;
+          // final errorMessage = lastMessage.copyWith(text: '');
+          // updatedMessages[updatedMessages.length - 1] = errorMessage;
 
+          final updatedMessages = List<Message>.from(state!.messages);
+          updatedMessages.removeLast();
           state = state!.copyWith(messages: updatedMessages);
 
           print("Stream error: $error");
@@ -165,12 +162,15 @@ class ChatStateNotifier extends StateNotifier<Conversation?> {
       );
     } catch (e) {
       print("Send message error: $e");
+      state = state!.copyWith(isLoading: false, isError: true);
+
+      // final updatedMessages = List<Message>.from(state!.messages);
+      // final lastMessage = updatedMessages.last;
+      // final errorMessage = lastMessage.copyWith(text: '');
+      // updatedMessages[updatedMessages.length - 1] = errorMessage;
 
       final updatedMessages = List<Message>.from(state!.messages);
-      final lastMessage = updatedMessages.last;
-      final errorMessage = lastMessage.copyWith(text: '');
-      updatedMessages[updatedMessages.length - 1] = errorMessage;
-
+      updatedMessages.removeLast();
       state = state!.copyWith(messages: updatedMessages);
 
       throw Exception("Could not send message. Please try again!");
@@ -190,13 +190,16 @@ extension on Message {
 }
 
 extension on Conversation {
-  Conversation copyWith({String? id, List<Message>? messages}) {
+  Conversation copyWith(
+      {String? id, List<Message>? messages, bool? isLoading, bool? isError}) {
     return Conversation(
         id: id ?? this.id,
         title: title,
         messages: messages ?? this.messages,
         modelUsed: modelUsed,
         createdAt: createdAt,
-        modifiedAt: modifiedAt);
+        modifiedAt: modifiedAt,
+        isLoading: isLoading ?? this.isLoading,
+        isError: isError ?? this.isError);
   }
 }

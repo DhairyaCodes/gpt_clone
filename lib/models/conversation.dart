@@ -7,6 +7,8 @@ class Conversation {
   final String modelUsed;
   final DateTime createdAt;
   final DateTime modifiedAt;
+  final bool isLoading;
+  final bool isError;
 
   Conversation({
     required this.id,
@@ -15,6 +17,8 @@ class Conversation {
     required this.modelUsed,
     required this.createdAt,
     required this.modifiedAt,
+    this.isLoading = false,
+    this.isError = false,
   });
 
   factory Conversation.fromJson(Map<String, dynamic> json) {

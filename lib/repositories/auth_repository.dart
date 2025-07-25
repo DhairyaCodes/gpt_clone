@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 import 'package:gpt_clone/providers/auth_providers.dart';
 
@@ -12,19 +11,15 @@ class AuthRepository {
   final FirebaseAuth _auth;
   AuthRepository(this._auth);
 
-  Future<UserCredential?> signInWithGoogle() async {
+  Future<User?> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return null; // User cancelled the sign-in
-
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final OAuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-      return await _auth.signInWithCredential(credential);
+      if (_auth.currentUser != null) {
+        return _auth.currentUser;
+      }
+      final credential = await _auth.signInAnonymously();
+      return credential.user;
     } on FirebaseAuthException catch (e) {
-      print(e.message);
+      print("Anonymous sign-in error: ${e.message}");
       return null;
     }
   }

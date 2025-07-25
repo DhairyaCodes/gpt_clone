@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gpt_clone/providers/theme_providers.dart';
 import 'package:gpt_clone/screens/auth_wrapper.dart';
 import 'firebase_options.dart';
 
@@ -18,11 +19,13 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDarkMode = ref.watch(isDarkModeProvider);
+
     return MaterialApp(
       title: 'ChatGPT Clone',
       home: const AuthWrapper(),

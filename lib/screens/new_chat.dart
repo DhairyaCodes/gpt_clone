@@ -5,18 +5,21 @@ class EmptyChatView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return SingleChildScrollView(
       // padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Container(
         height: MediaQuery.sizeOf(context).height * 0.5,
+        padding: EdgeInsets.symmetric(horizontal: 16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           // mainAxisSize: MainAxisSize.max,
           children: [
             Text(
               'What can I help with?',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineSmall
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             Wrap(
