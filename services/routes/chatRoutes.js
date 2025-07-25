@@ -103,7 +103,7 @@ router.post("/", async (req, res) => {
     }
     res.end();
   } catch (error) {
-    console.error("❌ Error in chat streaming:", error);
+    console.error("Error in chat streaming:", error);
     res.status(500).json({ error: "Failed to get response from Gemini" });
   } finally {
     if (fullResponseText) {
@@ -140,11 +140,11 @@ router.post("/", async (req, res) => {
           await newConversation.save();
         }
         console.log(
-          "✅ Conversation saved/updated successfully. ID:",
+          "Conversation saved/updated successfully. ID:",
           finalConversationId
         );
       } catch (dbError) {
-        console.error("❌ Error saving conversation to DB:", dbError);
+        console.error("Error saving conversation to DB:", dbError);
       }
     }
   }

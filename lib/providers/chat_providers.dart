@@ -8,21 +8,23 @@ import 'package:gpt_clone/models/message.dart';
 import 'package:gpt_clone/providers/auth_providers.dart';
 import 'package:gpt_clone/repositories/chat_repository.dart';
 
+
 final conversationsProvider =
     FutureProvider<List<ConversationSnippet>>((ref) async {
   final user = ref.watch(authStateChangesProvider).value;
   if (user == null) return []; // Return empty if no user
 
-  final chatRepository = ref.watch(chatRepositoryProvider);
+  final chatRepository = ref.read(chatRepositoryProvider);
   return chatRepository.getConversationList(user.uid);
 });
 
+
+
+
 final selectedConversationProvider = StateProvider<String?>((ref) => null);
 
-final chatStateProvider =
-    StateNotifierProvider<ChatStateNotifier, Conversation?>((ref) {
-  return ChatStateNotifier(ref);
-});
+
+
 
 final modelsProvider = FutureProvider<List<Map<String, String>>>((ref) async {
   return [
@@ -31,8 +33,19 @@ final modelsProvider = FutureProvider<List<Map<String, String>>>((ref) async {
   ];
 });
 
+
+
+
 final selectedModelProvider =
     StateProvider<String>((ref) => 'gemini-1.5-flash-latest');
+
+
+
+
+final chatStateProvider =
+    StateNotifierProvider<ChatStateNotifier, Conversation?>((ref) {
+  return ChatStateNotifier(ref);
+});
 
 class ChatStateNotifier extends StateNotifier<Conversation?> {
   final Ref _ref;
@@ -40,6 +53,7 @@ class ChatStateNotifier extends StateNotifier<Conversation?> {
 
   void startNewChat() {
     state = null;
+    _ref.invalidate(conversationsProvider);
   }
 
   Future<void> loadConversation(String conversationId) async {
@@ -132,6 +146,8 @@ class ChatStateNotifier extends StateNotifier<Conversation?> {
         },
         onDone: () {
           _ref.invalidate(conversationsProvider);
+          _ref.read(selectedConversationProvider.notifier).state =
+              state!.id;
         },
         onError: (error) {
           _ref.invalidate(conversationsProvider);

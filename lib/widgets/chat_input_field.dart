@@ -121,6 +121,23 @@ class _ChatInputFieldState extends ConsumerState<ChatInputField> {
       pickedFiles = await imagePicker.pickMultiImage();
     }
 
+    if (pickedFiles.length > 5) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Select upto 5 images at a time.'),
+            dismissDirection: DismissDirection.horizontal,
+            elevation: 10,
+          ),
+        );
+
+        setState(() {
+          _isUploading = false;
+        });
+      }
+      return;
+    }
+
     if (pickedFiles.isNotEmpty) {
       if (mounted) setState(() => _isUploading = true);
 
@@ -252,6 +269,8 @@ class _ChatInputFieldState extends ConsumerState<ChatInputField> {
                   onTapOutside: (event) {
                     _focusNode.unfocus();
                   },
+                  maxLines: 5,
+                  minLines: 1,
                 ),
               ),
               if (!_isTyping)
