@@ -159,6 +159,9 @@ class ChatHistoryPanel extends ConsumerWidget {
                   ),
                 ),
               ),
+              const SizedBox(
+                height: 76,
+              )
             ],
           ),
           Positioned(
@@ -204,7 +207,7 @@ class ChatHistoryPanel extends ConsumerWidget {
             ),
           ),
           Positioned(
-            bottom: 16,
+            bottom: 0,
             left: 0,
             right: 0,
             child: Column(
@@ -235,7 +238,7 @@ class ChatHistoryPanel extends ConsumerWidget {
                         trailing: Icon(Icons.more_horiz),
                       ),
                       SizedBox(
-                        height: 8,
+                        height: 16,
                       ),
                     ],
                   ),
